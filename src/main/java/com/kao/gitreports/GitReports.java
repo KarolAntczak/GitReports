@@ -8,6 +8,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Date;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -20,12 +21,19 @@ public class GitReports {
         git = Git.init().setDirectory(repositoryPath).call();
     }
 
-    public Stream<RevCommit> getCommits() throws IOException, GitAPIException {
+    private Stream<RevCommit> getCommits() throws IOException, GitAPIException {
         LogCommand command = git.log().all();
         return StreamSupport.stream(command.call().spliterator(), false);
     }
 
-    public Stream<String> getContributors() throws IOException, GitAPIException {
-        return getCommits().map( revCommit -> revCommit.getAuthorIdent().getName()).distinct();
+    public Stream<RevCommit> getCommits(Date after, Date before) throws IOException, GitAPIException {
+        return getCommits()
+                .filter(revCommit -> revCommit.getAuthorIdent().getWhen().after(after))
+                .filter(revCommit -> revCommit.getAuthorIdent().getWhen().before(before));
     }
+
+    public Stream<String> getContributors(Date after, Date before) throws IOException, GitAPIException {
+        return getCommits(after, before).map( revCommit -> revCommit.getAuthorIdent().getName()).distinct();
+    }
+
 }

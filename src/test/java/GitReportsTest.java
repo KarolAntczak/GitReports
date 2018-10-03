@@ -1,3 +1,4 @@
+import com.kao.gitreports.DateUtil;
 import com.kao.gitreports.GitReports;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -6,6 +7,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -28,7 +30,11 @@ public class GitReportsTest {
 
     @Test
     public void testGetContributors() throws IOException, GitAPIException {
-        Stream<String> contributorsStream = gitReports.getContributors();
+
+        Date after = DateUtil.parseDate("2018-01-01");
+        Date before = DateUtil.parseDate("2019-01-01");
+
+        Stream<String> contributorsStream = gitReports.getContributors(after, before);
         List<String> contributors = contributorsStream.collect(Collectors.toList());
 
         assertTrue(contributors.size() > 0);
