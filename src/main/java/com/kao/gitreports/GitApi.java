@@ -13,11 +13,11 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 @Slf4j
-public class GitReports {
+public class GitApi {
 
     private Git git;
 
-    public GitReports(File repositoryPath) throws GitAPIException {
+    public GitApi(File repositoryPath) throws GitAPIException {
         git = Git.init().setDirectory(repositoryPath).call();
     }
 
@@ -26,10 +26,15 @@ public class GitReports {
         return StreamSupport.stream(command.call().spliterator(), false);
     }
 
-    public Stream<RevCommit> getCommits(Date after, Date before) throws IOException, GitAPIException {
+    private Stream<RevCommit> getCommits(Date after, Date before) throws IOException, GitAPIException {
         return getCommits()
                 .filter(revCommit -> revCommit.getAuthorIdent().getWhen().after(after))
                 .filter(revCommit -> revCommit.getAuthorIdent().getWhen().before(before));
+    }
+
+    public Stream<RevCommit> getCommits(Date after, Date before, String author) throws IOException, GitAPIException {
+        return  getCommits(after, before)
+                .filter(revCommit -> revCommit.getAuthorIdent().getName().equalsIgnoreCase(author));
     }
 
     public Stream<String> getContributors(Date after, Date before) throws IOException, GitAPIException {
