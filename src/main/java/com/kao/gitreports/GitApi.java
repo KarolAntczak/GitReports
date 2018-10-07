@@ -7,10 +7,13 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffFormatter;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Date;
@@ -24,6 +27,19 @@ public class GitApi {
 
     public GitApi(File repositoryPath) throws GitAPIException {
         git = Git.init().setDirectory(repositoryPath).call();
+    }
+
+    public GitApi(File repositoryPath, String username, String password) throws GitAPIException {
+        log.info("Updating repo... (this may take some time)");
+        git = Git.init().setDirectory(repositoryPath).call();
+        git.pull().setCredentialsProvider(new UsernamePasswordCredentialsProvider(username, password))
+                .call();
+    }
+
+    public GitApi(File repositoryPath, URL repoUrl, String username, String password) throws GitAPIException, URISyntaxException {
+        log.info("Cloning repo... (this may take some time)");
+        git = Git.cloneRepository().setDirectory(repositoryPath).setURI(String.valueOf(repoUrl.toURI()))
+                .setCredentialsProvider(new UsernamePasswordCredentialsProvider(username, password)).call();
     }
 
     private Stream<RevCommit> getCommits() throws IOException, GitAPIException {
@@ -50,7 +66,6 @@ public class GitApi {
         getCommits(after, before, author)
                 .filter(commit -> ! commit.getShortMessage().contains("Merge branch"))
                 .forEach(commit -> {
-                    System.out.println(commit.getShortMessage());
             try (OutputStream outputStream = Files.newOutputStream(outputDir.resolve(commit.name() + ".diff"))) {
                 writeDiff(commit, outputStream);
             } catch (IOException e) {
@@ -61,6 +76,10 @@ public class GitApi {
     }
 
     private void writeDiff(RevCommit commit, OutputStream outputStream) {
+        if (commit.getParentCount()==0) {
+            log.warn("Found a commit without parent: {}", commit.getName());
+            return;
+        }
         RevCommit diffWith = commit.getParent(0);
         try (DiffFormatter diffFormatter = new DiffFormatter(outputStream)) {
             diffFormatter.setRepository(git.getRepository());

@@ -17,12 +17,19 @@ public class GitReport {
 
     private GitApi gitApi;
 
-    public GitReport(File repositoryPath) throws GitAPIException {
-        gitApi = new GitApi(repositoryPath);
+    public GitReport(GitApi gitApi) {
+        this.gitApi = gitApi;
     }
 
     public List<File> createActivityReport(Date after, Date before) {
-        return getUserList(after, before).stream().map(contributor -> createDiffsReport(after, before, contributor)).collect(Collectors.toList());
+        return getUserList(after, before).stream().map(contributor -> {
+            try {
+                return createActivityReport(after, before, contributor);
+            } catch (IOException | GitAPIException e) {
+                log.error(e.getMessage(), e);
+                return null;
+            }
+        }).collect(Collectors.toList());
     }
 
     public File createActivityReport(Date after, Date before, String user) throws IOException, GitAPIException {
@@ -34,7 +41,9 @@ public class GitReport {
 
         Stream<RevCommit> commitStream = gitApi.getCommits(after, before, user);
 
-        File reportFile = new File(String.format("Activity report %s %s - %s.csv", user, afterString, beforeString));
+        File reportFile = new File(String.format("activity reports/%s %s - %s.csv", user, afterString, beforeString));
+
+        Files.createDirectories(reportFile.toPath().getParent());
 
         log.info("Creating file '{}'...", reportFile);
 
@@ -69,7 +78,7 @@ public class GitReport {
 
         log.info("Retrieving diffs for user {} after {} before {} ...", user, afterString, beforeString);
 
-        File reportDir = new File(String.format("diffs %s %s - %s", user, afterString, beforeString));
+        File reportDir = new File(String.format("diffs/%s %s - %s", user, afterString, beforeString));
         try {
             Files.createDirectories(reportDir.toPath());
             gitApi.writeDiff(after, before, user, reportDir.toPath());
@@ -83,7 +92,11 @@ public class GitReport {
     }
 
     private List<String> getUserList(Date after, Date before) {
-        log.info("Retrieving user list...");
+        String afterString = DateUtil.toShortString(after);
+        String beforeString = DateUtil.toShortString(before);
+
+        log.info("Retrieving user list after {} before {} ...",  afterString, beforeString);
+
         Stream<String> contributorsStream;
         try {
             contributorsStream = gitApi.getContributors(after, before);
@@ -93,7 +106,7 @@ public class GitReport {
         }
         List<String> contributors = contributorsStream.collect(Collectors.toList());
 
-        log.info("Found {} contributors" + contributors.size());
+        log.info("Found {} contributors", contributors.size());
 
         return contributors;
     }
