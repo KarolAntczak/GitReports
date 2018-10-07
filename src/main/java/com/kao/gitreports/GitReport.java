@@ -41,7 +41,7 @@ public class GitReport {
 
         Stream<RevCommit> commitStream = gitApi.getCommits(after, before, user);
 
-        File reportFile = new File(String.format("activity reports %s - %s/%s", afterString, beforeString, user));
+        File reportFile = new File(String.format("activity reports %s - %s/%s.csv", afterString, beforeString, user));
 
         Files.createDirectories(reportFile.toPath().getParent());
 
