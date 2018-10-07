@@ -41,7 +41,7 @@ public class GitReport {
 
         Stream<RevCommit> commitStream = gitApi.getCommits(after, before, user);
 
-        File reportFile = new File(String.format("activity reports %s/%s - %s.csv", user, afterString, beforeString));
+        File reportFile = new File(String.format("activity reports %s - %s/%s", afterString, beforeString, user));
 
         Files.createDirectories(reportFile.toPath().getParent());
 
@@ -78,7 +78,7 @@ public class GitReport {
 
         log.info("Retrieving diffs for user {} after {} before {} ...", user, afterString, beforeString);
 
-        File reportDir = new File(String.format("diffs %s/%s - %s", user, afterString, beforeString));
+        File reportDir = new File(String.format("diffs %s - %s/%s", afterString, beforeString, user));
         try {
             Files.createDirectories(reportDir.toPath());
             gitApi.writeDiff(after, before, user, reportDir.toPath());
