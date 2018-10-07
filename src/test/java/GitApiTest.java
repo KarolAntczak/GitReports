@@ -23,7 +23,7 @@ public class GitApiTest {
     private static final Date AFTER = DateUtil.parseDate("2018-01-01");
     private static final Date BEFORE = DateUtil.parseDate("2019-01-01");
 
-    private static final String AUTHOR = "Karol";
+    private static final String AUTHOR = "Kao";
 
     private GitApi gitApi;
 
@@ -41,7 +41,7 @@ public class GitApiTest {
         assertTrue(contributors.size() > 0);
 
         log.info("Contributors: {}", contributors);
-        assertTrue(contributors.contains("Karol"));
+        assertTrue(contributors.contains("KarolAntczak"));
     }
 
     @Test

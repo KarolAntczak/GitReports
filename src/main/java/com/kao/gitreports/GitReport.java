@@ -6,7 +6,10 @@ import org.eclipse.jgit.revwalk.RevCommit;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -16,6 +19,10 @@ public class GitReport {
 
     public GitReport(File repositoryPath) throws GitAPIException {
         gitApi = new GitApi(repositoryPath);
+    }
+
+    public List<File> createActivityReport(Date after, Date before) {
+        return getUserList(after, before).stream().map(contributor -> createDiffsReport(after, before, contributor)).collect(Collectors.toList());
     }
 
     public File createActivityReport(Date after, Date before, String user) throws IOException, GitAPIException {
@@ -49,6 +56,46 @@ public class GitReport {
         writer.close();
         log.info("Success!");
         return reportFile;
+    }
+
+    public List<File> createDiffReports(Date after, Date before) {
+        return getUserList(after, before).stream().map(contributor -> createDiffsReport(after, before, contributor)).collect(Collectors.toList());
+    }
+
+    public File createDiffsReport(Date after, Date before, String user)  {
+
+        String afterString = DateUtil.toShortString(after);
+        String beforeString = DateUtil.toShortString(before);
+
+        log.info("Retrieving diffs for user {} after {} before {} ...", user, afterString, beforeString);
+
+        File reportDir = new File(String.format("diffs %s %s - %s", user, afterString, beforeString));
+        try {
+            Files.createDirectories(reportDir.toPath());
+            gitApi.writeDiff(after, before, user, reportDir.toPath());
+        } catch (IOException | GitAPIException e) {
+            log.error(e.getMessage(), e);
+            return null;
+        }
+
+        log.info("Success!");
+        return reportDir;
+    }
+
+    private List<String> getUserList(Date after, Date before) {
+        log.info("Retrieving user list...");
+        Stream<String> contributorsStream;
+        try {
+            contributorsStream = gitApi.getContributors(after, before);
+        } catch (IOException | GitAPIException e) {
+            log.error(e.getMessage(), e);
+            return  null;
+        }
+        List<String> contributors = contributorsStream.collect(Collectors.toList());
+
+        log.info("Found {} contributors" + contributors.size());
+
+        return contributors;
     }
 
 }

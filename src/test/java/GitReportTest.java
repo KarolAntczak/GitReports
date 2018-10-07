@@ -17,8 +17,7 @@ public class GitReportTest {
 
     private static final Date AFTER = DateUtil.parseDate("2018-01-01");
     private static final Date BEFORE = DateUtil.parseDate("2019-01-01");
-
-    private static final String AUTHOR = "Karol";
+    private static final String AUTHOR = "Kao";
 
     private GitReport gitReport;
 
@@ -34,6 +33,15 @@ public class GitReportTest {
 
         assertTrue(reportFile.exists());
         assertTrue(reportFile.isFile());
+    }
+
+    @Test
+    public void testCreateDiffsReport() throws IOException, GitAPIException {
+        File reportFile = gitReport.createDiffsReport(AFTER, BEFORE, AUTHOR);
+
+        assertTrue(reportFile.exists());
+        assertTrue(reportFile.isDirectory());
+        assertTrue(reportFile.list().length > 0);
     }
 
 }
