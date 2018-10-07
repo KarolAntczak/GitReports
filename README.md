@@ -10,3 +10,7 @@ For generating activity reports for all contributors in a certain period:
 For generating diffs for all contributors in a certain period:
 
 `java -jar gitreports.jar --activity <repo URL> --user <git username> --pass <git passwords> --from <date> --to <date> `
+
+## Building
+
+`mvn package`
