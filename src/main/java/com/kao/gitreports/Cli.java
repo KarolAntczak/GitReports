@@ -13,6 +13,7 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -86,12 +87,14 @@ public class Cli {
 
             Path repoPath = Paths.get("repo");
 
+            Files.createDirectories(repoPath);
+
             if (Arrays.asList(repoPath.toFile().list()).contains(".git")) {
                 gitReport = new GitReport(new GitApi(repoPath.toFile().getAbsoluteFile(), userString, passString));
             } else {
                 gitReport = new GitReport(new GitApi(repoPath.toFile().getAbsoluteFile(), gitRepUrl, userString, passString));
             }
-        } catch (GitAPIException | URISyntaxException e) {
+        } catch (GitAPIException | URISyntaxException | IOException e) {
            log.error(e.getMessage(), e);
            System.exit(-1);
         }
